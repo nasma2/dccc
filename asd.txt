@@ -1,0 +1,291 @@
+RPC
+
+rpcinfo
+rpcbind
+gcc
+sudo apt build essentials
+rpcgen -aC first.x
+make -f Makefile.first
+sudo ./first_server
+
+
+./first_client localhost
+
+
+RMI
+
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.math.BigInteger;
+
+public interface Factorial extends Remote {
+    BigInteger fact(int num) throws RemoteException;
+}
+
+
+
+import java.rmi.server.UnicastRemoteObject;
+import java.rmi.RemoteException;
+import java.math.BigInteger;
+
+public class FactorialImpl extends UnicastRemoteObject implements Factorial {
+    public FactorialImpl() throws RemoteException {
+        super();
+    }
+
+    @Override
+    public BigInteger fact(int num) throws RemoteException {
+        if (num < 0) {
+            throw new IllegalArgumentException("Negative numbers are not allowed.");
+        }
+        BigInteger factorial = BigInteger.ONE;
+        for (int i = 1; i <= num; i++) {
+            factorial = factorial.multiply(BigInteger.valueOf(i));
+        }
+        return factorial;
+    }
+}
+
+
+
+
+import java.rmi.Naming;
+import java.rmi.registry.LocateRegistry;
+
+public class FactorialServer {
+    public static void main(String[] args) {
+        try {
+            // Create an instance of the implementation class
+            Factorial factorialService = new FactorialImpl();
+
+            // Start RMI registry
+            LocateRegistry.createRegistry(1099);
+
+            // Bind the service to the registry
+            Naming.rebind("rmi://localhost/FactorialService", factorialService);
+            System.out.println("Factorial Service is running...");
+        } catch (Exception e) {
+            System.out.println("Error: " + e);
+        }
+    }
+}
+
+
+import java.rmi.Naming;
+import java.util.Scanner;
+
+public class FactorialClient {
+    public static void main(String[] args) {
+        try {
+            // Look up the remote object
+            Factorial factorialService = (Factorial) Naming.lookup("rmi://localhost/FactorialService");
+
+            // Get user input
+            Scanner scanner = new Scanner(System.in);
+            System.out.print("Enter a number to calculate its factorial: ");
+            int number = scanner.nextInt();
+
+            // Call the remote method and display result
+            System.out.println("Factorial of " + number + " is: " + factorialService.fact(number));
+        } catch (Exception e) {
+            System.out.println("Error: " + e);
+        }
+    }
+}
+
+
+
+
+
+
+
+
+javac InfoService.java
+javac InfoServiceImpl.java
+javac InfoServer.java
+javac InfoClient.java
+rmiregistry
+
+
+java InfoServer
+
+
+java InfoClient
+
+
+
+
+MPI
+
+
+#include <stdio.h>
+#include <mpi.h>
+
+int main(int argc, char** argv) {
+    int rank, size;
+    int number1 = 0, number2 = 0;
+    int sum = 0;
+
+    // Initialize the MPI environment
+    MPI_Init(&argc, &argv);
+
+    // Get the rank of the process
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    // Get the total number of processes
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    // Ensure there are exactly two processes
+    if (size != 2) {
+        if (rank == 0) {
+            printf("This program requires exactly two processes.\n");
+        }
+        MPI_Finalize();
+        return 1;
+    }
+
+    // Assign numbers to each process
+    if (rank == 0) {
+        number1 = 5; // Process 0 holds the first number
+        printf("Process %d: Number1 = %d\n", rank, number1);
+        // Send number1 to process 1
+        MPI_Send(&number1, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
+    } else if (rank == 1) {
+        number2 = 10; // Process 1 holds the second number
+        printf("Process %d: Number2 = %d\n", rank, number2);
+        // Receive number1 from process 0
+        MPI_Recv(&number1, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        
+        // Calculate sum
+        sum = number1 + number2;
+        printf("Process %d: Sum = %d + %d = %d\n", rank, number1, number2, sum);
+    }
+
+    // Finalize the MPI environment
+    MPI_Finalize();
+    
+    return 0;
+}
+
+
+
+mpicc test2.c -o test2
+mpirun -np 4 ./test2
+
+
+
+FOTRON:
+sudo apt update
+sudo apt install gfortran
+gfortran –-version
+file name hello.f90:
+program hello
+print *, "Hello, World!"
+end program hello
+gfortran -o hello hello.f90
+gfortran -g -o hello hello.f90
+./hello
+gdb ./hello
+
+*****program calculator
+    implicit none
+
+    ! Declare variables
+    real :: num1, num2
+    real :: sum, difference, product, quotient
+    integer :: iostat
+    character(len=20) :: filename
+    integer :: unit
+
+    ! Get input from the user
+    print *, "Enter first number: "
+    read *, num1
+    print *, "Enter second number: "
+    read *, num2
+
+    ! Perform arithmetic operations
+    sum = num1 + num2
+    difference = num1 - num2
+    product = num1 * num2
+
+    ! Check for division by zero
+    if (num2 /= 0.0) then
+        quotient = num1 / num2
+        print *, "Division: ", quotient
+    else
+        print *, "Warning: Division by zero is not allowed."
+        quotient = 0.0  ! Assign a default value if division by zero occurs
+    end if
+
+    ! Display results on the console
+    print *, "Results:"
+    print *, "Addition: ", sum
+    print *, "Subtraction: ", difference
+    print *, "Multiplication: ", product
+    
+    if (num2 /= 0.0) then
+        print *, "Division: ", quotient
+    end if
+
+    ! Open a file to write results
+    filename = 'cal.txt'
+    
+    open(unit=10, file=filename, status='replace', iostat=iostat)
+    
+    if (iostat /= 0) then
+        print *, "Error opening file."
+        stop
+    end if
+
+    ! Write results to the file
+    write(10, *) "Results:"
+    write(10, *) "Addition: ", sum
+    write(10, *) "Subtraction: ", difference
+    write(10, *) "Multiplication: ", product
+    
+    if (num2 /= 0.0) then
+        write(10, *) "Division: ", quotient
+    end if
+
+    ! Close the file
+    close(10)
+
+end program calculator
+
+
+
+******mpi&fortron
+program mpi_hello_world
+use mpi
+implicit none
+integer :: rank, size, ierr, tag
+integer :: source, dest
+character(len=20) :: message
+integer :: status(MPI_STATUS_SIZE)
+tag = 0 ! Tag for the message
+source = 0 ! Process rank 0 will send the message
+dest = 1 ! Process rank 1 will receive the message
+call MPI_INIT(ierr) ! Initialize MPI
+call MPI_COMM_RANK(MPI_COMM_WORLD, rank, ierr) ! Get process rank
+call MPI_COMM_SIZE(MPI_COMM_WORLD, size, ierr) ! Get total number of processes
+if (size < 2) then
+if (rank == 0) then
+print *, "This program requires at least 2 processes!"
+end if
+call MPI_FINALIZE(ierr)
+stop
+end if
+if (rank == source) then
+message = "Hello, World!" ! Message to send
+call MPI_SEND(message, len(message), MPI_CHARACTER, dest, tag, MPI_COMM_WORLD, ierr)
+print '(A,I3,A,A,A,I3)', "Process", rank, "sent message:", trim(message), "to process", dest
+else if (rank == dest) then
+call MPI_RECV(message, len(message), MPI_CHARACTER, source, tag, MPI_COMM_WORLD, status, ierr)
+print '(A,I3,A,A,A,I3)', "Process", rank, "received message:", trim(message), "from process", source
+end if
+call MPI_FINALIZE(ierr) ! Finalize MPI
+end program mpi_hello_world
+
+
+https://github.com/nasma2/dcc.git
+
